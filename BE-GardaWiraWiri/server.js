@@ -1,32 +1,83 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
+'use strict';
 
-dotenv.config();
+// Load env PERTAMA KALI sebelum apapun, termasuk sebelum import lain
+require('dotenv').config();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/gardawirawiri";
+const app = require('./src/app');
+const env = require('./src/config/env');
+const { connectDatabase, disconnectDatabase } = require('./src/config/prisma')
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// =============================================
+// Startup
+// =============================================
+async function start() {
+  try {
+    // 1. Koneksi ke database
+    await connectDatabase();
 
-// Connect to MongoDB
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+    // 2. Jalankan Express server
+    const server = app.listen(env.PORT, () => {
+      console.log('');
+      console.log('╔═══════════════════════════════════════════╗');
+      console.log('║     🛡️  GARDA WIRA WIRI API SERVER        ║');
+      console.log('╠═══════════════════════════════════════════╣');
+      console.log(`║  Status    : Running                      ║`);
+      console.log(`║  Port      : ${env.PORT}                          ║`);
+      console.log(`║  Env       : ${env.NODE_ENV.padEnd(10)}                 ║`);
+      console.log(`║  API       : http://localhost:${env.PORT}${env.API_PREFIX} ║`);
+      console.log(`║  Health    : http://localhost:${env.PORT}/health   ║`);
+      console.log('╚═══════════════════════════════════════════╝');
+      console.log('');
+    });
 
-// Basic route
-app.get("/api/health", (req, res) => {
-  res.json({ message: "Server is running" });
-});
+    // =============================================
+    // Graceful Shutdown
+    // Tutup koneksi dengan bersih saat menerima sinyal OS
+    // =============================================
+    const gracefulShutdown = async (signal) => {
+      console.log(`\n⚠️  Received ${signal}. Starting graceful shutdown...`);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+      server.close(async () => {
+        console.log('🔒 HTTP server closed');
+
+        try {
+          await disconnectDatabase();
+          console.log('✅ Graceful shutdown complete');
+          process.exit(0);
+        } catch (err) {
+          console.error('❌ Error during shutdown:', err);
+          process.exit(1);
+        }
+      });
+
+      // Force exit setelah 10 detik jika shutdown macet
+      setTimeout(() => {
+        console.error('⏰ Forced shutdown after timeout');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    // =============================================
+    // Unhandled promise rejection — tangkap error async yang tidak di-catch
+    // =============================================
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('❌ Unhandled Promise Rejection at:', promise);
+      console.error('   Reason:', reason);
+      // Di production sebaiknya shutdown dan restart via process manager
+    });
+
+    process.on('uncaughtException', (error) => {
+      console.error('❌ Uncaught Exception:', error);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+}
+
+start();

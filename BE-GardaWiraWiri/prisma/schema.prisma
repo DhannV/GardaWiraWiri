@@ -1,0 +1,361 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum Role {
+  client
+  freelancer
+  admin
+}
+
+enum ProjectStatus {
+  open          // Menerima bid dari freelancer
+  in_progress   // Bid diterima, contract sedang berjalan
+  completed     // Client konfirmasi pekerjaan selesai
+  cancelled     // Dibatalkan oleh client atau admin
+  closed        // Deadline lewat, tidak ada bid yang diterima
+}
+
+enum ProjectCategory {
+  antar_jemput
+  belanja
+  pindahan
+  kebersihan
+  perbaikan
+  titip_antrian
+  administrasi
+  lainnya
+}
+
+enum BidStatus {
+  pending    // Menunggu review client
+  accepted   // Dipilih oleh client
+  rejected   // Ditolak client
+  withdrawn  // Ditarik kembali oleh freelancer
+}
+
+enum ContractStatus {
+  active      // Contract sedang berjalan
+  completed   // Selesai, dikonfirmasi client
+  cancelled   // Dibatalkan
+  disputed    // Dalam sengketa, menunggu mediasi admin
+}
+
+enum PaymentStatus {
+  pending     // Menunggu pembayaran client
+  paid        // Client sudah membayar (escrow)
+  released    // Dana dilepas ke freelancer (setelah selesai)
+  refunded    // Dana dikembalikan ke client (cancel/dispute)
+  failed      // Pembayaran gagal
+}
+
+enum PaymentMethod {
+  bank_transfer
+  e_wallet
+  virtual_account
+  credit_card
+}
+
+enum NotificationType {
+  new_bid
+  bid_accepted
+  bid_rejected
+  bid_withdrawn
+  contract_created
+  contract_completed
+  contract_cancelled
+  contract_disputed
+  work_submitted
+  review_received
+  payment_received
+  payment_released
+}
+
+enum SkillLevel {
+  beginner
+  intermediate
+  expert
+}
+
+// =============================================================================
+// MODELS
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Users — Akun utama semua pengguna (client, freelancer, admin)
+// -----------------------------------------------------------------------------
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         Role     @default(client)
+  name         String   @db.VarChar(100)
+  phone        String?  @unique @db.VarChar(20)
+  avatarUrl    String?  @map("avatar_url") @db.VarChar(500)
+  isActive     Boolean  @default(true) @map("is_active")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  clientProfile     ClientProfile?
+  freelancerProfile FreelancerProfile?
+  notifications     Notification[]
+  sentReviews       Review[]           @relation("ReviewerRelation")
+  receivedReviews   Review[]           @relation("RevieweeRelation")
+
+  @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// ClientProfiles — Data tambahan khusus user dengan role client
+// Dipisah dari users agar users tetap ramping dan extensible
+// -----------------------------------------------------------------------------
+model ClientProfile {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  companyName String?  @map("company_name") @db.VarChar(150)
+  address     String?  @db.VarChar(300)
+  city        String?  @db.VarChar(100)
+  bio         String?  @db.Text
+  totalSpent  Decimal  @default(0) @map("total_spent") @db.Decimal(12, 2)
+  totalOrders Int      @default(0) @map("total_orders")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+
+  @@map("client_profiles")
+}
+
+// -----------------------------------------------------------------------------
+// FreelancerProfiles — Data tambahan khusus user dengan role freelancer
+// -----------------------------------------------------------------------------
+model FreelancerProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  bio            String?  @db.Text
+  location       String?  @db.VarChar(150)
+  hourlyRate     Decimal? @map("hourly_rate") @db.Decimal(10, 2)
+  avgRating      Float    @default(0) @map("avg_rating")
+  totalReviews   Int      @default(0) @map("total_reviews")
+  completedJobs  Int      @default(0) @map("completed_jobs")
+  totalEarned    Decimal  @default(0) @map("total_earned") @db.Decimal(12, 2)
+  isAvailable    Boolean  @default(true) @map("is_available")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills         FreelancerSkill[]
+  portfolioItems PortfolioItem[]
+  bids           Bid[]
+  contracts      Contract[]        @relation("FreelancerContractRelation")
+
+  @@map("freelancer_profiles")
+}
+
+// -----------------------------------------------------------------------------
+// FreelancerSkills — Skill list milik freelancer (1 profil → banyak skill)
+// -----------------------------------------------------------------------------
+model FreelancerSkill {
+  id          String            @id @default(uuid()) @db.Uuid
+  profileId   String            @map("profile_id") @db.Uuid
+  skillName   String            @map("skill_name") @db.VarChar(100)
+  level       SkillLevel        @default(intermediate)
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  profile     FreelancerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, skillName])
+  @@map("freelancer_skills")
+}
+
+// -----------------------------------------------------------------------------
+// PortfolioItems — Item portofolio milik freelancer
+// -----------------------------------------------------------------------------
+model PortfolioItem {
+  id          String            @id @default(uuid()) @db.Uuid
+  profileId   String            @map("profile_id") @db.Uuid
+  title       String            @db.VarChar(200)
+  description String?           @db.Text
+  imageUrl    String?           @map("image_url") @db.VarChar(500)
+  projectUrl  String?           @map("project_url") @db.VarChar(500)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  profile     FreelancerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_items")
+}
+
+// -----------------------------------------------------------------------------
+// Projects — Project/order yang diposting oleh client
+// -----------------------------------------------------------------------------
+model Project {
+  id             String          @id @default(uuid()) @db.Uuid
+  clientProfileId String         @map("client_profile_id") @db.Uuid
+  title          String          @db.VarChar(200)
+  description    String          @db.Text
+  category       ProjectCategory @default(lainnya)
+  status         ProjectStatus   @default(open)
+  budgetMin      Decimal         @map("budget_min") @db.Decimal(12, 2)
+  budgetMax      Decimal         @map("budget_max") @db.Decimal(12, 2)
+  location       String?         @db.VarChar(200)
+  deadline       DateTime?
+  attachmentUrl  String?         @map("attachment_url") @db.VarChar(500)
+  viewCount      Int             @default(0) @map("view_count")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  clientProfile  ClientProfile   @relation(fields: [clientProfileId], references: [id], onDelete: Restrict)
+  bids           Bid[]
+  contract       Contract?
+
+  @@index([status, category])
+  @@index([clientProfileId])
+  @@map("projects")
+}
+
+// -----------------------------------------------------------------------------
+// Bids — Penawaran dari freelancer ke sebuah project
+// -----------------------------------------------------------------------------
+model Bid {
+  id                  String            @id @default(uuid()) @db.Uuid
+  projectId           String            @map("project_id") @db.Uuid
+  freelancerProfileId String            @map("freelancer_profile_id") @db.Uuid
+  proposedPrice       Decimal           @map("proposed_price") @db.Decimal(12, 2)
+  coverLetter         String            @map("cover_letter") @db.Text
+  estimatedDays       Int               @map("estimated_days")
+  status              BidStatus         @default(pending)
+  rejectionNote       String?           @map("rejection_note") @db.Text
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  project             Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  freelancerProfile   FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+  contract            Contract?
+
+  // Satu freelancer hanya bisa bid satu kali per project
+  @@unique([projectId, freelancerProfileId])
+  @@index([projectId, status])
+  @@map("bids")
+}
+
+// -----------------------------------------------------------------------------
+// Contracts — Dibuat otomatis saat client menerima bid
+// -----------------------------------------------------------------------------
+model Contract {
+  id                  String            @id @default(uuid()) @db.Uuid
+  projectId           String            @unique @map("project_id") @db.Uuid
+  bidId               String            @unique @map("bid_id") @db.Uuid
+  freelancerProfileId String            @map("freelancer_profile_id") @db.Uuid
+  agreedPrice         Decimal           @map("agreed_price") @db.Decimal(12, 2)
+  status              ContractStatus    @default(active)
+  terms               String?           @db.Text
+  workNote            String?           @map("work_note") @db.Text
+  submittedAt         DateTime?         @map("submitted_at")
+  completedAt         DateTime?         @map("completed_at")
+  cancelledAt         DateTime?         @map("cancelled_at")
+  cancellationReason  String?           @map("cancellation_reason") @db.Text
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  project             Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  bid                 Bid               @relation(fields: [bidId], references: [id], onDelete: Restrict)
+  freelancerProfile   FreelancerProfile @relation("FreelancerContractRelation", fields: [freelancerProfileId], references: [id], onDelete: Restrict)
+  payment             Payment?
+  review              Review?
+
+  @@index([freelancerProfileId, status])
+  @@map("contracts")
+}
+
+// -----------------------------------------------------------------------------
+// Payments — Rekam transaksi pembayaran per contract
+// Satu contract memiliki satu payment record (escrow model)
+// -----------------------------------------------------------------------------
+model Payment {
+  id              String        @id @default(uuid()) @db.Uuid
+  contractId      String        @unique @map("contract_id") @db.Uuid
+  amount          Decimal       @db.Decimal(12, 2)
+  platformFee     Decimal       @default(0) @map("platform_fee") @db.Decimal(12, 2)
+  netAmount       Decimal       @map("net_amount") @db.Decimal(12, 2)
+  status          PaymentStatus @default(pending)
+  method          PaymentMethod?
+  externalRef     String?       @unique @map("external_ref") @db.VarChar(255)
+  paidAt          DateTime?     @map("paid_at")
+  releasedAt      DateTime?     @map("released_at")
+  refundedAt      DateTime?     @map("refunded_at")
+  notes           String?       @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  contract        Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  @@map("payments")
+}
+
+// -----------------------------------------------------------------------------
+// Reviews — Ulasan dari client ke freelancer setelah contract selesai
+// Satu contract menghasilkan satu review
+// -----------------------------------------------------------------------------
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  contractId  String   @unique @map("contract_id") @db.Uuid
+  reviewerId  String   @map("reviewer_id") @db.Uuid
+  revieweeId  String   @map("reviewee_id") @db.Uuid
+  rating      Int      // 1–5
+  comment     String?  @db.Text
+  isPublic    Boolean  @default(true) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  reviewer    User     @relation("ReviewerRelation", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewee    User     @relation("RevieweeRelation", fields: [revieweeId], references: [id], onDelete: Restrict)
+
+  @@index([revieweeId])
+  @@map("reviews")
+}
+
+// -----------------------------------------------------------------------------
+// Notifications — Notifikasi in-app untuk semua user
+// -----------------------------------------------------------------------------
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  message   String           @db.Text
+  isRead    Boolean          @default(false) @map("is_read")
+  data      Json?            // Payload fleksibel (projectId, bidId, dll)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
