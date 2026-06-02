@@ -1,3 +1,8 @@
+// =============================================================================
+// Prisma Schema — Garda Wira Wiri
+// Marketplace jasa suruhan: client posting project, freelancer bid & kerjakan
+// =============================================================================
+
 generator client {
   provider = "prisma-client-js"
 }

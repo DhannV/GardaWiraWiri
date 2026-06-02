@@ -13,6 +13,7 @@ const { errorHandler, notFoundHandler } = require('./middlewares/error.middlewar
 // ---- Import Routes ----
 const authRoutes = require('./modules/auth/auth.routes');
 const userRoutes = require('./modules/users/users.routes');
+const clientRoutes = require('./modules/clients/clients.routes');
 const freelancerRoutes = require('./modules/freelancers/freelancers.routes');
 const projectRoutes = require('./modules/projects/projects.routes');
 const bidRoutes = require('./modules/bids/bids.routes');
@@ -113,6 +114,7 @@ const API = env.API_PREFIX; // default: /api/v1
 
 app.use(`${API}/auth`, authRoutes);
 app.use(`${API}/users`, userRoutes);
+app.use(`${API}/clients`, clientRoutes);
 app.use(`${API}/freelancers`, freelancerRoutes);
 app.use(`${API}/projects`, projectRoutes);
 app.use(`${API}/bids`, bidRoutes);
