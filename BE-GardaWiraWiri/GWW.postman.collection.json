@@ -1,0 +1,750 @@
+{
+  "info": {
+    "_postman_id": "garda-wira-wiri-v1",
+    "name": "Garda Wira Wiri API",
+    "description": "Collection lengkap untuk testing API Garda Wira Wiri.\n\n## Setup\n1. Import collection ini ke Postman\n2. Buat Environment baru dengan variabel:\n   - `base_url` = http://localhost:3000/api/v1\n   - `admin_token` (otomatis diisi setelah login admin)\n   - `client_token` (otomatis diisi setelah login client)\n   - `freelancer_token` (otomatis diisi setelah login freelancer)\n   - `project_id`, `bid_id`, `contract_id`, `payment_id`, `review_id` (otomatis diisi dari response)\n\n## Test Flow\nRegister → Login → Create Project → Bid → Accept Bid → Contract → Payment → Complete → Review",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000/api/v1", "type": "string" },
+    { "key": "admin_token", "value": "", "type": "string" },
+    { "key": "client_token", "value": "", "type": "string" },
+    { "key": "client2_token", "value": "", "type": "string" },
+    { "key": "freelancer_token", "value": "", "type": "string" },
+    { "key": "freelancer2_token", "value": "", "type": "string" },
+    { "key": "project_id", "value": "", "type": "string" },
+    { "key": "bid_id", "value": "", "type": "string" },
+    { "key": "contract_id", "value": "", "type": "string" },
+    { "key": "payment_id", "value": "", "type": "string" },
+    { "key": "review_id", "value": "", "type": "string" },
+    { "key": "freelancer_profile_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 AUTH",
+      "item": [
+        {
+          "name": "Register Client",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('client_token', json.data.accessToken);",
+            "  console.log('client_token set:', json.data.accessToken.substring(0,20)+'...');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Budi Santoso\",\n  \"email\": \"budi.test@example.com\",\n  \"password\": \"Client123!\",\n  \"role\": \"client\",\n  \"phone\": \"08111999001\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          },
+          "response": [{
+            "name": "201 Created — Register Client",
+            "status": "Created",
+            "code": 201,
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": "{\n  \"success\": true,\n  \"message\": \"Registrasi berhasil. Selamat bergabung di Garda Wira Wiri!\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440001\",\n      \"name\": \"Budi Santoso\",\n      \"email\": \"budi.test@example.com\",\n      \"role\": \"client\",\n      \"phone\": \"08111999001\",\n      \"avatarUrl\": null,\n      \"isActive\": true,\n      \"isVerified\": false,\n      \"createdAt\": \"2024-01-15T08:00:00.000Z\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "Register Freelancer",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('freelancer_token', json.data.accessToken);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Andi Wijaya\",\n  \"email\": \"andi.test@example.com\",\n  \"password\": \"Freelancer123!\",\n  \"role\": \"freelancer\",\n  \"phone\": \"08122999001\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('admin_token', json.data.accessToken);",
+            "  console.log('✅ admin_token saved');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@gardawira.id\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          },
+          "response": [{
+            "name": "200 OK — Login Success",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Login berhasil.\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"name\": \"Super Admin\",\n      \"email\": \"admin@gardawira.id\",\n      \"role\": \"admin\"\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMCIsImVtYWlsIjoiYWRtaW5AZ2FyZGF3aXJhLmlkIiwicm9sZSI6ImFkbWluIn0.xxx\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "Login Client (Budi)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('client_token', json.data.accessToken);",
+            "  console.log('✅ client_token saved');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"budi@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Client 2 (Siti)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) { pm.collectionVariables.set('client2_token', json.data.accessToken); }"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"siti@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Freelancer (Andi)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('freelancer_token', json.data.accessToken);",
+            "  console.log('✅ freelancer_token saved');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"andi@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login Freelancer 2 (Rini)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) { pm.collectionVariables.set('freelancer2_token', json.data.accessToken); }"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"rini@example.com\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "PATCH /auth/change-password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Admin123!\",\n  \"newPassword\": \"NewPass123!\",\n  \"confirmPassword\": \"NewPass123!\"\n}" },
+            "url": { "raw": "{{base_url}}/auth/change-password", "host": ["{{base_url}}"], "path": ["auth", "change-password"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 PROJECTS",
+      "item": [
+        {
+          "name": "GET /projects — List Semua (Publik)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/projects?page=1&limit=10", "host": ["{{base_url}}"], "path": ["projects"], "query": [
+              {"key":"page","value":"1"},{"key":"limit","value":"10"}
+            ]}
+          }
+        },
+        {
+          "name": "GET /projects — Filter Open + Search",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/projects?status=open&category=antar_jemput&search=dokumen", "host": ["{{base_url}}"], "path": ["projects"], "query": [
+              {"key":"status","value":"open"},{"key":"category","value":"antar_jemput"},{"key":"search","value":"dokumen"}
+            ]}
+          }
+        },
+        {
+          "name": "GET /projects/status/open",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/projects/status/open", "host": ["{{base_url}}"], "path": ["projects","status","open"] }
+          }
+        },
+        {
+          "name": "POST /projects — Create (Client) ⭐",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('project_id', json.data.id);",
+            "  console.log('✅ project_id saved:', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Antar Paket dari Toko ke Pelanggan 3 Titik\",\n  \"description\": \"Saya butuh bantuan mengantarkan 3 paket dari toko saya di Jl. Soekarno-Hatta 45 ke 3 alamat pelanggan di dalam kota Malang. Berat masing-masing paket sekitar 2-5 kg. Pengiriman harus selesai dalam hari yang sama. Mohon koordinasikan rute pengiriman dengan efisien.\",\n  \"category\": \"antar_jemput\",\n  \"budgetMin\": 80000,\n  \"budgetMax\": 150000,\n  \"location\": \"Malang, Jawa Timur\",\n  \"deadline\": \"2025-12-31T23:59:00Z\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/projects", "host": ["{{base_url}}"], "path": ["projects"] }
+          },
+          "response": [{
+            "name": "201 Created — Project dibuat",
+            "status": "Created",
+            "code": 201,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Project berhasil dibuat.\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440010\",\n    \"title\": \"Antar Paket dari Toko ke Pelanggan 3 Titik\",\n    \"category\": \"antar_jemput\",\n    \"status\": \"open\",\n    \"budgetMin\": \"80000\",\n    \"budgetMax\": \"150000\",\n    \"location\": \"Malang, Jawa Timur\",\n    \"createdAt\": \"2024-01-15T09:00:00.000Z\",\n    \"_count\": { \"bids\": 0 }\n  }\n}"
+          }]
+        },
+        {
+          "name": "GET /projects/:id — Detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}"] }
+          }
+        },
+        {
+          "name": "PATCH /projects/:id — Update",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"budgetMax\": 175000,\n  \"description\": \"Saya butuh bantuan mengantarkan 3 paket dari toko saya di Jl. Soekarno-Hatta 45 ke 3 alamat pelanggan di dalam kota Malang. Berat masing-masing paket sekitar 2-5 kg. Pengiriman harus selesai dalam hari yang sama. Budget dinaikkan karena jarak lebih jauh dari estimasi awal.\"\n}" },
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💼 BIDS",
+      "item": [
+        {
+          "name": "POST /bids — Freelancer Ajukan Bid ⭐",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('bid_id', json.data.id);",
+            "  console.log('✅ bid_id saved:', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{freelancer_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{project_id}}\",\n  \"proposedPrice\": 120000,\n  \"coverLetter\": \"Halo, saya Andi Wijaya, kurir berpengalaman di Malang. Saya sangat familiar dengan rute pengiriman di dalam kota Malang. Saya memiliki motor dalam kondisi baik, kotak pengiriman yang aman, dan pengalaman mengantar paket lebih dari 2 tahun. Semua 3 titik pengiriman akan saya selesaikan dalam waktu 3-4 jam. Tepat waktu dan amanah adalah prioritas saya.\",\n  \"estimatedDays\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/bids", "host": ["{{base_url}}"], "path": ["bids"] }
+          },
+          "response": [{
+            "name": "201 Created — Bid diajukan",
+            "status": "Created",
+            "code": 201,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Bid berhasil diajukan.\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440020\",\n    \"proposedPrice\": \"120000\",\n    \"coverLetter\": \"Halo, saya Andi...\",\n    \"estimatedDays\": 1,\n    \"status\": \"pending\",\n    \"createdAt\": \"2024-01-15T09:30:00.000Z\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "GET /bids/project/:id — List Bid (Client) ⭐",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/bids/project/{{project_id}}", "host": ["{{base_url}}"], "path": ["bids","project","{{project_id}}"] }
+          }
+        },
+        {
+          "name": "GET /bids/my-bids — Freelancer Lihat Bid Sendiri",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{freelancer_token}}" }],
+            "url": { "raw": "{{base_url}}/bids/my-bids?status=pending", "host": ["{{base_url}}"], "path": ["bids","my-bids"], "query": [{"key":"status","value":"pending"}] }
+          }
+        },
+        {
+          "name": "PATCH /bids/:id/accept — Client Terima Bid ⭐ (Buat Contract!)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data && json.data.contract) {",
+            "  pm.collectionVariables.set('contract_id', json.data.contract.id);",
+            "  console.log('✅ contract_id saved:', json.data.contract.id);",
+            "  console.log('✅ Contract dibuat otomatis!');",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/bids/{{bid_id}}/accept", "host": ["{{base_url}}"], "path": ["bids","{{bid_id}}","accept"] }
+          },
+          "response": [{
+            "name": "200 OK — Bid diterima, Contract otomatis dibuat",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Bid berhasil diterima. Contract telah dibuat otomatis.\",\n  \"data\": {\n    \"bid\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440020\",\n      \"status\": \"accepted\",\n      \"proposedPrice\": \"120000\"\n    },\n    \"contract\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440030\",\n      \"status\": \"active\",\n      \"agreedPrice\": \"120000\",\n      \"terms\": \"Pekerjaan diselesaikan dalam 1 hari kerja sesuai kesepakatan bid.\",\n      \"createdAt\": \"2024-01-15T10:00:00.000Z\"\n    }\n  }\n}"
+          }]
+        },
+        {
+          "name": "PATCH /bids/:id/reject — Client Tolak Bid",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"rejectionNote\": \"Terima kasih atas penawarannya. Kami sudah memilih freelancer lain yang lebih sesuai.\"\n}" },
+            "url": { "raw": "{{base_url}}/bids/{{bid_id}}/reject", "host": ["{{base_url}}"], "path": ["bids","{{bid_id}}","reject"] }
+          }
+        },
+        {
+          "name": "DELETE /bids/:id — Freelancer Tarik Bid",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{freelancer_token}}" }],
+            "url": { "raw": "{{base_url}}/bids/{{bid_id}}", "host": ["{{base_url}}"], "path": ["bids","{{bid_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 CONTRACTS",
+      "item": [
+        {
+          "name": "GET /contracts — List Contract Saya",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/contracts", "host": ["{{base_url}}"], "path": ["contracts"] }
+          }
+        },
+        {
+          "name": "GET /contracts/:id — Detail Contract",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{freelancer_token}}" }],
+            "url": { "raw": "{{base_url}}/contracts/{{contract_id}}", "host": ["{{base_url}}"], "path": ["contracts","{{contract_id}}"] }
+          }
+        },
+        {
+          "name": "PATCH /contracts/:id/start — Freelancer Mulai Kerjakan ⭐",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{freelancer_token}}" }],
+            "url": { "raw": "{{base_url}}/contracts/{{contract_id}}/start", "host": ["{{base_url}}"], "path": ["contracts","{{contract_id}}","start"] }
+          }
+        },
+        {
+          "name": "PATCH /contracts/:id/finish — Freelancer Submit Hasil ⭐",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{freelancer_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"workNote\": \"Semua 3 paket telah berhasil diantarkan ke tujuan masing-masing. Penerima pertama tanda tangan jam 10.30, penerima kedua jam 11.15, penerima ketiga jam 12.00. Semua paket dalam kondisi baik dan tidak ada yang rusak.\"\n}" },
+            "url": { "raw": "{{base_url}}/contracts/{{contract_id}}/finish", "host": ["{{base_url}}"], "path": ["contracts","{{contract_id}}","finish"] }
+          },
+          "response": [{
+            "name": "200 OK — Hasil dikirim, menunggu konfirmasi client",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Hasil pekerjaan berhasil dikirimkan. Menunggu konfirmasi client.\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440030\",\n    \"status\": \"active\",\n    \"submittedAt\": \"2024-01-15T12:00:00.000Z\",\n    \"workNote\": \"Semua 3 paket telah berhasil diantarkan...\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "PATCH /contracts/:id/cancel — Cancel Contract",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"cancellationReason\": \"Pekerjaan tidak dapat dilanjutkan karena kondisi force majeure.\"\n}" },
+            "url": { "raw": "{{base_url}}/contracts/{{contract_id}}/cancel", "host": ["{{base_url}}"], "path": ["contracts","{{contract_id}}","cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 PAYMENTS",
+      "item": [
+        {
+          "name": "POST /payments/create — Client Buat Payment ⭐",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('payment_id', json.data.id);",
+            "  console.log('✅ payment_id saved:', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"contractId\": \"{{contract_id}}\",\n  \"method\": \"bank_transfer\",\n  \"notes\": \"Transfer via BCA ke rekening platform\"\n}" },
+            "url": { "raw": "{{base_url}}/payments/create", "host": ["{{base_url}}"], "path": ["payments","create"] }
+          },
+          "response": [{
+            "name": "201 Created — Payment dibuat",
+            "status": "Created",
+            "code": 201,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Payment berhasil dibuat. Silakan selesaikan pembayaran sesuai metode yang dipilih.\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440040\",\n    \"amount\": \"120000\",\n    \"platformFee\": \"6000\",\n    \"netAmount\": \"114000\",\n    \"status\": \"pending\",\n    \"method\": \"bank_transfer\",\n    \"createdAt\": \"2024-01-15T10:05:00.000Z\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "GET /payments/history — Riwayat Payment",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/payments/history", "host": ["{{base_url}}"], "path": ["payments","history"] }
+          }
+        },
+        {
+          "name": "GET /payments/:id — Detail Payment",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/payments/{{payment_id}}", "host": ["{{base_url}}"], "path": ["payments","{{payment_id}}"] }
+          }
+        },
+        {
+          "name": "PATCH /payments/:id/paid — Admin Konfirmasi Bayar ⭐",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"externalRef\": \"TRX-BCA-2024-001\",\n  \"notes\": \"Transfer BCA konfirmasi manual oleh admin\"\n}" },
+            "url": { "raw": "{{base_url}}/payments/{{payment_id}}/paid", "host": ["{{base_url}}"], "path": ["payments","{{payment_id}}","paid"] }
+          },
+          "response": [{
+            "name": "200 OK — Pembayaran dikonfirmasi, dana masuk escrow",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Pembayaran berhasil dikonfirmasi. Dana ditahan platform (escrow).\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440040\",\n    \"status\": \"paid\",\n    \"paidAt\": \"2024-01-15T10:30:00.000Z\",\n    \"externalRef\": \"TRX-BCA-2024-001\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "PATCH /payments/:id/refund — Admin Refund",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"notes\": \"Refund karena freelancer tidak hadir sesuai perjanjian setelah 3x konfirmasi.\"\n}" },
+            "url": { "raw": "{{base_url}}/payments/{{payment_id}}/refund", "host": ["{{base_url}}"], "path": ["payments","{{payment_id}}","refund"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ COMPLETE PROJECT",
+      "item": [
+        {
+          "name": "PATCH /projects/:id/complete — Client Konfirmasi Selesai ⭐ (Release Dana!)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/projects/{{project_id}}/complete", "host": ["{{base_url}}"], "path": ["projects","{{project_id}}","complete"] }
+          },
+          "response": [{
+            "name": "200 OK — Project selesai, contract completed, payment released",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Project berhasil diselesaikan. Terima kasih telah menggunakan Garda Wira Wiri!\",\n  \"data\": {\n    \"id\": \"{{project_id}}\",\n    \"status\": \"completed\",\n    \"contract\": {\n      \"id\": \"{{contract_id}}\",\n      \"status\": \"completed\",\n      \"completedAt\": \"2024-01-15T14:00:00.000Z\"\n    }\n  }\n}"
+          }]
+        }
+      ]
+    },
+    {
+      "name": "⭐ REVIEWS",
+      "item": [
+        {
+          "name": "POST /reviews — Client Beri Review ⭐",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const json = pm.response.json();",
+            "if (json.success && json.data) {",
+            "  pm.collectionVariables.set('review_id', json.data.id);",
+            "  console.log('✅ review_id saved:', json.data.id);",
+            "}"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"contractId\": \"{{contract_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Andi sangat profesional dan tepat waktu! Semua paket diantarkan dengan aman dan tidak ada yang rusak. Komunikasi juga lancar selama proses pengiriman. Sangat merekomendasikan Andi untuk pengiriman barang di area Malang!\",\n  \"isPublic\": true\n}" },
+            "url": { "raw": "{{base_url}}/reviews", "host": ["{{base_url}}"], "path": ["reviews"] }
+          },
+          "response": [{
+            "name": "201 Created — Review dikirim, avgRating freelancer terupdate",
+            "status": "Created",
+            "code": 201,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Review berhasil diberikan. Terima kasih atas ulasannya!\",\n  \"data\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440050\",\n    \"rating\": 5,\n    \"comment\": \"Andi sangat profesional...\",\n    \"isPublic\": true,\n    \"reviewer\": { \"name\": \"Budi Santoso\" },\n    \"reviewee\": { \"name\": \"Andi Wijaya\" },\n    \"createdAt\": \"2024-01-15T14:30:00.000Z\"\n  }\n}"
+          }]
+        },
+        {
+          "name": "GET /reviews/freelancer/:id — List Review Freelancer (Publik)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/reviews/freelancer/{{freelancer_profile_id}}", "host": ["{{base_url}}"], "path": ["reviews","freelancer","{{freelancer_profile_id}}"] }
+          }
+        },
+        {
+          "name": "PATCH /reviews/:id — Update Review",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Andi sangat profesional dan tepat waktu! Update: beliau juga memberikan foto bukti pengiriman ke setiap titik. Sangat recommended!\"\n}" },
+            "url": { "raw": "{{base_url}}/reviews/{{review_id}}", "host": ["{{base_url}}"], "path": ["reviews","{{review_id}}"] }
+          }
+        },
+        {
+          "name": "DELETE /reviews/:id — Hapus Review",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/reviews/{{review_id}}", "host": ["{{base_url}}"], "path": ["reviews","{{review_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 NOTIFICATIONS",
+      "item": [
+        {
+          "name": "GET /notifications — List Notifikasi Saya",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/notifications?isRead=false&page=1&limit=20", "host": ["{{base_url}}"], "path": ["notifications"], "query": [
+              {"key":"isRead","value":"false"},{"key":"page","value":"1"},{"key":"limit","value":"20"}
+            ]}
+          },
+          "response": [{
+            "name": "200 OK — List notifikasi + unreadCount",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Notifikasi berhasil diambil.\",\n  \"data\": [\n    {\n      \"id\": \"notif-001\",\n      \"type\": \"new_bid\",\n      \"title\": \"Bid baru masuk! 📬\",\n      \"message\": \"Ada freelancer baru yang mengajukan bid.\",\n      \"isRead\": false,\n      \"createdAt\": \"2024-01-15T09:30:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 3,\n    \"totalPages\": 1,\n    \"unreadCount\": 3\n  }\n}"
+          }]
+        },
+        {
+          "name": "PATCH /notifications/:id/read — Tandai Sudah Dibaca",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/notifications/:notificationId/read", "host": ["{{base_url}}"], "path": ["notifications",":notificationId","read"], "variable": [{"key":"notificationId","value":"GANTI_DENGAN_NOTIFICATION_ID"}] }
+          }
+        },
+        {
+          "name": "DELETE /notifications/:id — Hapus Notifikasi",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/notifications/:notificationId", "host": ["{{base_url}}"], "path": ["notifications",":notificationId"], "variable": [{"key":"notificationId","value":"GANTI_DENGAN_NOTIFICATION_ID"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 FREELANCERS",
+      "item": [
+        {
+          "name": "GET /freelancers — List (Filter + Sort Rating)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/freelancers?sortBy=avgRating&sortOrder=desc&isAvailable=true&page=1&limit=10", "host": ["{{base_url}}"], "path": ["freelancers"], "query": [
+              {"key":"sortBy","value":"avgRating"},{"key":"sortOrder","value":"desc"},
+              {"key":"isAvailable","value":"true"},{"key":"page","value":"1"},{"key":"limit","value":"10"}
+            ]}
+          }
+        },
+        {
+          "name": "GET /freelancers — Filter by Skill",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/freelancers?skill=Kebersihan&location=Surabaya", "host": ["{{base_url}}"], "path": ["freelancers"], "query": [
+              {"key":"skill","value":"Kebersihan"},{"key":"location","value":"Surabaya"}
+            ]}
+          }
+        },
+        {
+          "name": "GET /freelancers/:id — Detail Profil",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/freelancers/{{freelancer_profile_id}}", "host": ["{{base_url}}"], "path": ["freelancers","{{freelancer_profile_id}}"] }
+          }
+        },
+        {
+          "name": "PATCH /freelancers/profile — Update Profil Freelancer",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{freelancer_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"bio\": \"Kurir berpengalaman 4 tahun di Malang dan sekitarnya. Siap antar jemput barang dan orang. Motor matic Honda Vario tahun 2022. Tepat waktu dan amanah adalah prioritas saya.\",\n  \"hourlyRate\": 40000,\n  \"isAvailable\": true,\n  \"skills\": [\n    { \"skillName\": \"Antar Jemput\", \"level\": \"expert\" },\n    { \"skillName\": \"Pengiriman Barang\", \"level\": \"expert\" },\n    { \"skillName\": \"Belanja Titipan\", \"level\": \"intermediate\" }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/freelancers/profile", "host": ["{{base_url}}"], "path": ["freelancers","profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏠 CLIENTS",
+      "item": [
+        {
+          "name": "GET /clients/profile — Profil Client Saya",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/clients/profile", "host": ["{{base_url}}"], "path": ["clients","profile"] }
+          }
+        },
+        {
+          "name": "PATCH /clients/profile — Update Profil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{client_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"companyName\": \"PT Maju Bersama\",\n  \"city\": \"Malang\",\n  \"address\": \"Jl. Kawi No. 25, Malang\",\n  \"bio\": \"Perusahaan yang aktif menggunakan jasa pengiriman dan belanja titipan.\"\n}" },
+            "url": { "raw": "{{base_url}}/clients/profile", "host": ["{{base_url}}"], "path": ["clients","profile"] }
+          }
+        },
+        {
+          "name": "GET /clients/projects — Project Milik Saya",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{client_token}}" }],
+            "url": { "raw": "{{base_url}}/clients/projects?status=open", "host": ["{{base_url}}"], "path": ["clients","projects"], "query": [{"key":"status","value":"open"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 ADMIN",
+      "item": [
+        {
+          "name": "GET /users — List Semua User (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/users?page=1&limit=20&role=freelancer", "host": ["{{base_url}}"], "path": ["users"], "query": [
+              {"key":"page","value":"1"},{"key":"limit","value":"20"},{"key":"role","value":"freelancer"}
+            ]}
+          }
+        },
+        {
+          "name": "GET /users?search= — Cari User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/users?search=andi", "host": ["{{base_url}}"], "path": ["users"], "query": [{"key":"search","value":"andi"}] }
+          }
+        },
+        {
+          "name": "PATCH /users/:id — Suspend User (isActive: false)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": false\n}" },
+            "url": { "raw": "{{base_url}}/users/:userId", "host": ["{{base_url}}"], "path": ["users",":userId"], "variable": [{"key":"userId","value":"GANTI_DENGAN_USER_ID"}] }
+          }
+        },
+        {
+          "name": "GET /contracts — Semua Contract (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/contracts?status=active", "host": ["{{base_url}}"], "path": ["contracts"], "query": [{"key":"status","value":"active"}] }
+          }
+        },
+        {
+          "name": "GET /payments/history — Semua Payment (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/payments/history?status=pending", "host": ["{{base_url}}"], "path": ["payments","history"], "query": [{"key":"status","value":"pending"}] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🚦 HEALTH CHECK",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/health", "host": ["http://localhost:3000"], "path": ["health"] }
+          },
+          "response": [{
+            "name": "200 OK — Server running",
+            "status": "OK",
+            "code": 200,
+            "body": "{\n  \"success\": true,\n  \"message\": \"Garda Wira Wiri API is running\",\n  \"environment\": \"development\",\n  \"timestamp\": \"2024-01-15T08:00:00.000Z\",\n  \"version\": \"1.0.0\"\n}"
+          }]
+        },
+        {
+          "name": "GET 404 — Unknown Route",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/unknown-endpoint", "host": ["{{base_url}}"], "path": ["unknown-endpoint"] }
+          },
+          "response": [{
+            "name": "404 Not Found",
+            "status": "Not Found",
+            "code": 404,
+            "body": "{\n  \"success\": false,\n  \"message\": \"Endpoint GET /api/v1/unknown-endpoint tidak ditemukan.\"\n}"
+          }]
+        }
+      ]
+    }
+  ]
+}
