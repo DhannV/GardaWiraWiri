@@ -21,6 +21,7 @@ const contractRoutes = require('./modules/contracts/contracts.routes');
 const reviewRoutes = require('./modules/reviews/reviews.routes');
 const notificationRoutes = require('./modules/notifications/notifications.routes');
 const adminRoutes = require('./modules/admin/admin.routes');
+const paymentRoutes = require('./modules/payments/payments.routes');
 
 // =============================================
 // Inisialisasi Express App
@@ -121,6 +122,7 @@ app.use(`${API}/bids`, bidRoutes);
 app.use(`${API}/contracts`, contractRoutes);
 app.use(`${API}/reviews`, reviewRoutes);
 app.use(`${API}/notifications`, notificationRoutes);
+app.use(`${API}/payments`, paymentRoutes);
 app.use(`${API}/admin`, adminRoutes);
 
 // =============================================

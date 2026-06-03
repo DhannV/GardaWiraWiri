@@ -3,6 +3,9 @@
 const { prisma, withTransaction, batchQueries } = require('../../config/prisma');
 const { parsePagination, buildPaginationMeta } = require('../../utils/pagination');
 const { createNotification } = require('../../utils/notification.helper');
+// releasePaymentInternal dipanggil dalam transaksi completeProject
+// Lazy require menghindari circular dependency
+let paymentsService;
 
 // =============================================================================
 // PROJECTS SERVICE
@@ -488,6 +491,13 @@ async function completeProject(projectId, requestUser) {
       where: { id: project.contract.freelancerProfileId },
       data: { completedJobs: { increment: 1 } },
     });
+
+    // Release payment escrow ke freelancer (jika ada payment berstatus 'paid')
+    // Lazy-load untuk menghindari circular dependency saat module pertama kali dimuat
+    if (!paymentsService) {
+      paymentsService = require('../payments/payments.service');
+    }
+    await paymentsService.releasePaymentInternal(project.contract.id, tx);
   });
 
   // Notifikasi ke freelancer (di luar transaksi — kegagalan tidak rollback)
