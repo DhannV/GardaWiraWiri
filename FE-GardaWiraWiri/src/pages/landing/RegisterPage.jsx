@@ -101,7 +101,6 @@ const Register = () => {
                 className="w-10 h-10"
               />
             </span>
-            f
             <span>
               Garda <span className="text-[#1A67B2]">Wira-Wiri</span>
             </span>
@@ -167,7 +166,7 @@ const Register = () => {
               value={formData.name}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
-              placeholder="ex: Alrizky Putra Dhandi"
+              placeholder="Username"
             />
           </div>
 
@@ -182,7 +181,7 @@ const Register = () => {
               value={formData.email}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
-              placeholder="alrizky2906@gmail.com"
+              placeholder="example@gmail.com"
             />
           </div>
 
@@ -197,7 +196,7 @@ const Register = () => {
               value={formData.phone}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
-              placeholder="ex: 082352769327"
+              placeholder="081234567890"
             />
           </div>
 
@@ -212,7 +211,7 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
-              placeholder="••••••••"
+              placeholder="password"
             />
           </div>
 
