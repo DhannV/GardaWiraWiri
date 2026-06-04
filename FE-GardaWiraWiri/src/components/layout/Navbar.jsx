@@ -31,7 +31,7 @@ export default function Navbar() {
             Fitur
           </a>
           <a
-            href="#services"
+            href="/services"
             className="hover:text-[#1A67B2] transition-colors"
           >
             Layanan
