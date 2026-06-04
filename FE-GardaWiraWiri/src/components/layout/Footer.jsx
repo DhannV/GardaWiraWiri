@@ -77,24 +77,24 @@ export default function Footer() {
             <li className="flex items-center space-x-2">
               <span>Email:</span>
               <a
-                href="mailto:hello@gardawirawiri.com"
+                href="mailto:gardawirawiri@gmail.com"
                 className="hover:text-white transition-colors"
               >
-                hello@gardawirawiri.com
+                gardawirawiri@gmail.com
               </a>
             </li>
             <li className="flex items-center space-x-2">
               <span>WhatsApp:</span>
               <a
-                href="https://wa.me/6281234567890"
+                href=""
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition-colors"
               >
-                +62 812-3456-7890
+                -
               </a>
             </li>
-            <li>Lokasi: Jakarta, Indonesia</li>
+            <li>Lokasi: Malang, Indonesia</li>
           </ul>
         </div>
       </div>
@@ -104,13 +104,13 @@ export default function Footer() {
         <p>&copy; {currentYear} Garda Wira-Wiri. All rights reserved.</p>
         <div className="flex space-x-6">
           <a
-            href="#"
+            href="/kebijakan-privasi"
             className="hover:text-white transition-colors duration-200"
           >
             Kebijakan Privasi
           </a>
           <a
-            href="#"
+            href="/terms-faq"
             className="hover:text-white transition-colors duration-200"
           >
             Syarat & Ketentuan

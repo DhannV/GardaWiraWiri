@@ -51,7 +51,7 @@ export default function TermsAndFaqPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1C2939] font-sans antialiased selection:bg-[#7DCDB4]/30 flex flex-col justify-between">
       {/* AREA KONTEN UTAMA (Kena batasan max-width agar rapi di tengah) */}
-      <div className="max-w-4xl w-full mx-auto space-y-12 py-12 px-6 md:px-12 flex-grow">
+      <div className="max-w-4xl w-full mx-auto space-y-12 py-12 px-6 md:px-12 pb-10 flex-grow">
         {/* Tombol Kembali yang Estetik */}
         <div className="flex justify-start">
           <button
@@ -67,7 +67,7 @@ export default function TermsAndFaqPage() {
         {/* HEADER UTAMA */}
         <div className="text-center space-y-3">
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-            Syarat, Ketentuan & <span className="text-[#1A67B2]">FAQ</span>
+            Syarat, Ketentuan & <span className="text-[#00B5B7]">FAQ</span>
           </h1>
           <p className="text-sm text-gray-400 max-w-xl mx-auto">
             Dokumen legalitas aturan penggunaan platform serta rangkuman jawaban
@@ -79,7 +79,7 @@ export default function TermsAndFaqPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-10 space-y-8">
           {/* Pengantar / Kebijakan Umum */}
           <div className="border-b border-gray-50 pb-6 space-y-3">
-            <div className="flex items-center gap-2.5 text-[#1A67B2]">
+            <div className="flex items-center gap-2.5 text-[#00B5B7]">
               <ShieldCheck className="w-5 h-5" />
               <h2 className="text-lg font-bold">
                 Syarat & Ketentuan Umum Garda Wira-Wiri
@@ -110,7 +110,7 @@ export default function TermsAndFaqPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-[#1C2939] font-bold text-base">
               <FileText className="w-4 h-4 text-gray-400" />
-              <h3>1. Kebijakan Layanan</h3>
+              <h3 className="text-[#00B5B7]">1. Kebijakan Layanan</h3>
             </div>
             <ol className="list-[lower-alpha] pl-5 text-sm text-gray-500 space-y-2.5 leading-relaxed">
               <li>
@@ -162,11 +162,10 @@ export default function TermsAndFaqPage() {
               </li>
               <li>
                 Terdapat beberapa istilah yang digunakan, antara lain:{" "}
-                <strong>“Mitra / Rekan Jasa”</strong> yang mengacu bagi
-                Pelaksana Jasa lapangan; <strong>“Pelanggan”</strong> yang
-                mengacu kepada Pengguna yang memesan layanan, dan{" "}
-                <strong>“Pengguna”</strong> adalah istilah umum bagi kedua pihak
-                baik pelanggan maupun mitra.
+                <strong>“Freelancer”</strong> yang mengacu bagi Pelaksana Jasa
+                lapangan; <strong>Client</strong> yang mengacu kepada Pengguna
+                yang memesan layanan, dan <strong>Client</strong> adalah istilah
+                umum bagi kedua pihak baik pelanggan maupun mitra.
               </li>
               <li>
                 Perusahaan dapat mengubah perjanjian ini sewaktu-waktu dengan
@@ -180,7 +179,7 @@ export default function TermsAndFaqPage() {
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2 text-[#1C2939] font-bold text-base">
               <CreditCard className="w-4 h-4 text-gray-400" />
-              <h3>2. Pembayaran / Penarikan Dana</h3>
+              <h3 className="text-[#00B5B7]">2. Pembayaran / Penarikan Dana</h3>
             </div>
             <ol className="list-[lower-alpha] pl-5 text-sm text-gray-500 space-y-2.5 leading-relaxed">
               <li>
@@ -220,7 +219,9 @@ export default function TermsAndFaqPage() {
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2 text-[#1C2939] font-bold text-base">
               <UserX className="w-4 h-4 text-gray-400" />
-              <h3>3. Kewajiban Pelanggan & Pengguna</h3>
+              <h3 className="text-[#00B5B7]">
+                3. Kewajiban Pelanggan & Pengguna
+              </h3>
             </div>
             <p className="text-sm text-gray-500">
               Pelanggan atau pengguna dilarang keras melakukan kegiatan-kegiatan
@@ -257,7 +258,7 @@ export default function TermsAndFaqPage() {
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2 text-[#1C2939] font-bold text-base">
               <Lock className="w-4 h-4 text-gray-400" />
-              <h3>4. Kebijakan Privasi</h3>
+              <h3 className="text-[#00B5B7]">4. Kebijakan Privasi</h3>
             </div>
             <div className="text-sm text-gray-500 leading-relaxed space-y-3">
               <p>
@@ -282,7 +283,7 @@ export default function TermsAndFaqPage() {
         {/* AREA BAGIAN FAQ (FREQUENTLY ASKED QUESTIONS) */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-[#1C2939]">
-            <HelpCircle className="w-5 h-5 text-[#1A67B2]" />
+            <HelpCircle className="w-5 h-5 text-[#00B5B7]" />
             <h2 className="text-xl font-bold">
               Frequently Asked Questions (FAQ)
             </h2>

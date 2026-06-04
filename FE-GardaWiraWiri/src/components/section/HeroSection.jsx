@@ -1,8 +1,11 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import logo from "../../assets/images/logo/LogoGarda.png";
+import { useNavigate } from "react-router-dom";
 
 export default function HeroSection() {
+  const navigate = useNavigate();
+
   return (
     <section
       id="hero"
@@ -22,10 +25,13 @@ export default function HeroSection() {
           Anda, sehingga Anda bisa fokus pada hal yang paling penting.
         </p>
         <div className="flex flex-wrap gap-4 pt-2">
-          <button className="bg-[#1A67B2] hover:bg-[#00B5B7] text-white px-7 py-3.5 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-[#1A67B2]/20">
-            Mulai Sekarang
-          </button>
-          <button className="border border-gray-200 hover:border-[#1A67B2] text-[#1C2939] hover:text-[#1A67B2] px-7 py-3.5 rounded-xl font-medium transition-all duration-300">
+          <button
+            onClick={() => {
+              navigate("/pelajari-layanan");
+              setIsOpen(false);
+            }}
+            className="bg-[#1A67B2] hover:bg-[#00B5B7] text-white px-7 py-3.5 rounded-xl font-medium transition-all duration-300 shadow-lg shadow-[#1A67B2]/20"
+          >
             Pelajari Layanan
           </button>
         </div>
