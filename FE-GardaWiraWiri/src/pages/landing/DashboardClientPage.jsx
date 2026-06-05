@@ -40,7 +40,7 @@ export default function DashboardClientPage() {
         setLoadingProjects(true);
         setError(null);
 
-        const response = await fetch(`${BASE_URL}/projects`, {
+        const response = await fetch(`${BASE_URL}/clients/projects`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
