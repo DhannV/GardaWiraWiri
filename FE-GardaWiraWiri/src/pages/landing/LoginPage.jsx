@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../../assets/images/logo/LogoGarda.png";
 
 const Login = () => {
@@ -6,6 +7,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const formatErrorMessage = (result) => {
+    if (Array.isArray(result.errors) && result.errors.length > 0) {
+      return result.errors[0].message;
+    }
+    if (result.errors && typeof result.errors === "object") {
+      const firstKey = Object.keys(result.errors)[0];
+      if (firstKey) return result.errors[firstKey];
+    }
+    // 🌟 1. PERBAIKAN: Diubah dari "Pendaftaran" menjadi "Login"
+    return result.message || "Login gagal. Mohon periksa kembali data Anda.";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,25 +41,18 @@ const Login = () => {
       if (result.success && result.data) {
         const { accessToken, user } = result.data;
 
-        // 💾 SIMPAN DATA PENTING KE LOCALSTORAGE UNTUK DASHBOARD KE DEPANNYA
         localStorage.setItem("token", accessToken);
-        localStorage.setItem("user_role", user.role); // 'client', 'freelancer', atau 'admin'
+        localStorage.setItem("user_role", user.role);
         localStorage.setItem("user_name", user.name);
 
-        setMessage(` Login Berhasil! Selamat Datang ${user.name}.`);
+        setMessage(`Login Berhasil! Selamat Datang ${user.name}.`);
 
-        // 🧭 ARAHKAN DASHBOARD BERDASARKAN ROLE USER
         setTimeout(() => {
-          if (user.role === "client") {
-            window.location.href = "/";
-          } else if (user.role === "freelancer") {
-            window.location.href = "/";
-          } else if (user.role === "admin") {
-            window.location.href = "/";
-          }
+          window.location.href = "/";
         }, 1500);
       } else {
-        setMessage(`Gagal: ${result.message || "Email atau password salah"}`);
+        const cleanMessage = formatErrorMessage(result);
+        setMessage(`Gagal: ${cleanMessage}`);
       }
     } catch (error) {
       setMessage("Terjadi kesalahan jaringan / server mati.");
@@ -56,7 +63,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 relative">
-      {/* 🧭 TOMBOL KEMBALI KE BERANDA (Atas Kiri Form) */}
+      {/* TOMBOL KEMBALI */}
       <div className="w-full max-w-md mb-4 flex justify-start">
         <a
           href="/"
@@ -85,13 +92,7 @@ const Login = () => {
         {/* LOGO AREA */}
         <div className="flex justify-center mb-4">
           <div className="flex items-center gap-2 font-bold text-xl text-blue-900">
-            <span className="">
-              <img
-                src={logo}
-                alt="Logo Garda Wira-Wiri"
-                className="w-10 h-10"
-              />
-            </span>
+            <img src={logo} alt="Logo Garda Wira-Wiri" className="w-10 h-10" />
             <span>
               Garda <span className="text-[#1A67B2]">Wira-Wiri</span>
             </span>
@@ -105,21 +106,9 @@ const Login = () => {
           Masuk untuk mengelola tugas wira-wiri Anda
         </p>
 
-        {/* NOTIFIKASI RESPONS */}
-        {message && (
-          <div
-            className={`p-3.5 rounded-xl mb-5 text-xs font-semibold border ${
-              message.includes("")
-                ? "bg-green-50 border-green-200 text-green-700"
-                : "bg-red-50 border-red-200 text-red-700"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
         {/* FORMULIR */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* EMAIL */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Alamat Email
@@ -134,35 +123,72 @@ const Login = () => {
             />
           </div>
 
+          {/* PASSWORD DENGAN FITUR MATA */}
           <div>
-            <div className="flex justify-between items-center mb-1.5">
+            {/* <div className="flex justify-between items-center mb-1.5">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Password
               </label>
               <a
-                href="#"
+                href="/change-password"
                 className="text-xs font-bold text-[#1A67B2] hover:text-[#00B5B7] hover:underline"
               >
                 Lupa Password?
               </a>
+            </div> */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
+                placeholder="password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-900/20 focus:border-[#00B5B7] outline-none text-sm transition-all placeholder:text-slate-300"
-              placeholder="password"
-            />
           </div>
 
-          {/* BUTTON DENGAN WARNA BRANDING BARU */}
+          {/* NOTIFIKASI RESPONS */}
+          {message && (
+            <div
+              className={`p-3.5 rounded-xl text-xs font-semibold border transition-all ${
+                // 🌟 2. PERBAIKAN: Menggunakan .toLowerCase() agar deteksi warna merah tidak meleset
+                message.toLowerCase().includes("gagal") ||
+                message.toLowerCase().includes("terjadi")
+                  ? "bg-red-50 border-red-200 text-red-600 shadow-sm"
+                  : "bg-green-50 border-green-200 text-green-700 shadow-sm"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          {/* BUTTON SUBMIT */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-4 py-3.5 bg-[#1A67B2] hover:bg-[#00B5B7] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-900/20 transition-all active:scale-[0.99] disabled:bg-slate-300 disabled:shadow-none"
+            className="w-full py-3.5 bg-[#1A67B2] hover:bg-[#00B5B7] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-900/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:shadow-none"
           >
-            {loading ? "Sedang Memproses..." : "Masuk ke Akun"}
+            {loading ? (
+              <>
+                {/* 🌟 Ikon Loader2 berputar otomatis berkat class 'animate-spin' bawaan Tailwind */}
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Memverifikasi Akun...</span>
+              </>
+            ) : (
+              "Masuk ke Akun"
+            )}
           </button>
         </form>
 

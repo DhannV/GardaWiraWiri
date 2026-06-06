@@ -2,25 +2,25 @@ import React, { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../../assets/images/logo/LogoGarda.png";
 
-const Register = () => {
-  const [role, setRole] = useState("client");
+const ChangePasswordPage = () => {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    phone: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+
+  // State untuk visibilitas masing-masing input password
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🌟 HELPER UNTUK MENYARING ERROR AGAR TERLIHAT PROFESIONAL
   const formatErrorMessage = (result) => {
-    // Jika backend mengirimkan error dalam bentuk array objek (seperti isu validasi password)
     if (Array.isArray(result.errors) && result.errors.length > 0) {
       return result.errors[0].message;
     }
@@ -28,9 +28,9 @@ const Register = () => {
       const firstKey = Object.keys(result.errors)[0];
       if (firstKey) return result.errors[firstKey];
     }
-    // Fallback jika hanya ada pesan text biasa
     return (
-      result.message || "Pendaftaran gagal. Mohon periksa kembali data Anda."
+      result.message ||
+      "Gagal mengubah password. Silakan periksa kembali data Anda."
     );
   };
 
@@ -39,21 +39,20 @@ const Register = () => {
     setLoading(true);
     setMessage("");
 
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      phone: formData.phone,
-      role: role,
-    };
+    // Validasi Sederhana di Sisi Frontend sebelum kirim ke API
+    if (formData.newPassword !== formData.confirmPassword) {
+      setMessage("Gagal: Konfirmasi password baru tidak cocok.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(
-        "https://gardawirawiri.onrender.com/api/v1/auth/register",
+        "https://gardawirawiri.onrender.com/api/v1/auth/change-password",
         {
-          method: "POST",
+          method: "PATCH", // 🌟 Sesuai dengan metode API Anda
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(formData),
         },
       );
 
@@ -61,11 +60,19 @@ const Register = () => {
 
       if (response.ok || result.success) {
         setMessage(
-          `Registrasi Sukses sebagai ${role.toUpperCase()}! Silakan Login.`,
+          `Sukses: ${result.message || "Password berhasil diubah. Silakan login ulang."}`,
         );
-        setFormData({ name: "", email: "", password: "", phone: "" });
+        setFormData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+
+        // Alihkan kembali ke halaman login setelah 2 detik
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 2000);
       } else {
-        // 🌟 Memanggil helper di sini, menghilangkan teks status code (422/400) dan kode raw JSON
         const cleanMessage = formatErrorMessage(result);
         setMessage(`Gagal: ${cleanMessage}`);
       }
@@ -78,10 +85,10 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-6 relative">
-      {/* TOMBOL KEMBALI */}
+      {/* TOMBOL KEMBALI KE LOGIN */}
       <div className="w-full max-w-md mb-4 flex justify-start">
         <a
-          href="/"
+          href="/login"
           className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-blue-900 transition-colors group"
         >
           <svg
@@ -98,7 +105,7 @@ const Register = () => {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          Kembali ke Beranda
+          Kembali ke Login
         </a>
       </div>
 
@@ -115,109 +122,35 @@ const Register = () => {
         </div>
 
         <h2 className="text-2xl font-black text-center text-[#00B5B7] tracking-tight">
-          Daftar Akun Baru
+          Perbarui Password
         </h2>
         <p className="text-xs text-slate-400 text-center mt-1 mb-6 font-medium">
-          Sederhanakan hidup Anda bersama Garda Wira-Wiri
+          Amankan akun Garda Wira-Wiri Anda dengan kata sandi baru
         </p>
-
-        {/* TAB TOGGLE ROLE */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 border border-slate-200/50">
-          <button
-            type="button"
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 ${
-              role === "client"
-                ? "bg-[#00B5B7] text-white shadow-lg"
-                : "text-slate-500"
-            }`}
-            onClick={() => setRole("client")}
-          >
-            Sebagai Client
-          </button>
-          <button
-            type="button"
-            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all duration-300 ${
-              role === "freelancer"
-                ? "bg-[#00B5B7] text-white shadow-lg"
-                : "text-slate-500"
-            }`}
-            onClick={() => setRole("freelancer")}
-          >
-            Sebagai Freelancer
-          </button>
-        </div>
 
         {/* FORMULIR */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* NAMA */}
+          {/* PASSWORD SEKARANG */}
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
-              placeholder="Username"
-            />
-          </div>
-
-          {/* EMAIL */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Alamat Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
-              placeholder="example@gmail.com"
-            />
-          </div>
-
-          {/* TELEPON */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Nomor Telepon / WA
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              required
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
-              placeholder="081234567890"
-            />
-          </div>
-
-          {/* PASSWORD DENGAN ICON MATA */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Password
+              Password Saat Ini
             </label>
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
-                name="password"
+                type={showCurrent ? "text" : "password"}
+                name="currentPassword"
                 required
-                value={formData.password}
+                value={formData.currentPassword}
                 onChange={handleChange}
                 className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
-                placeholder="password"
+                placeholder="Masukkan password lama"
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowCurrent(!showCurrent)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? (
+                {showCurrent ? (
                   <EyeOff className="w-4 h-4" />
                 ) : (
                   <Eye className="w-4 h-4" />
@@ -226,11 +159,71 @@ const Register = () => {
             </div>
           </div>
 
-          {/* 🌟 NOTIFIKASI DI BAWAH PASSWORD (BERSIH DARI KODE & STATUS ERROR) */}
+          {/* PASSWORD BARU */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Password Baru
+            </label>
+            <div className="relative">
+              <input
+                type={showNew ? "text" : "password"}
+                name="newPassword"
+                required
+                value={formData.newPassword}
+                onChange={handleChange}
+                className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
+                placeholder="Masukkan password baru"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+              >
+                {showNew ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* KONFIRMASI PASSWORD BARU */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Konfirmasi Password Baru
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                name="showConfirm" // Menggunakan state lokal, atau samakan dengan nama properti payload
+                name="confirmPassword"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#00B5B7] outline-none text-sm transition-all"
+                placeholder="Ulangi password baru"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600"
+              >
+                {showConfirm ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* NOTIFIKASI RESPONS */}
           {message && (
             <div
               className={`p-3.5 rounded-xl text-xs font-semibold border transition-all ${
-                message.startsWith("Gagal") || message.includes("Terjadi")
+                message.toLowerCase().includes("gagal") ||
+                message.toLowerCase().includes("terjadi")
                   ? "bg-red-50 border-red-200 text-red-600 shadow-sm"
                   : "bg-green-50 border-green-200 text-green-700 shadow-sm"
               }`}
@@ -243,33 +236,21 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3.5 bg-[#1A67B2] hover:bg-[#00B5B7] text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:bg-slate-300"
+            className="w-full py-3.5 bg-[#1A67B2] hover:bg-[#00B5B7] text-white font-bold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:bg-slate-300"
           >
             {loading ? (
               <>
-                {/* 🌟 Spinner berputar manis di halaman register */}
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Mendaftarkan Akun...</span>
+                <span>Memproses Perubahan...</span>
               </>
             ) : (
-              `Mulai Sebagai ${role === "client" ? "Client" : "Freelancer"}`
+              "Simpan Password Baru"
             )}
           </button>
         </form>
-
-        {/* FOOTER LINK */}
-        <p className="text-center text-xs text-slate-400 mt-6 font-medium">
-          Sudah punya akun?{" "}
-          <a
-            href="/login"
-            className="text-[#1A67B2] font-bold hover:underline hover:text-[#00B5B7]"
-          >
-            Masuk Di Sini
-          </a>
-        </p>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default ChangePasswordPage;

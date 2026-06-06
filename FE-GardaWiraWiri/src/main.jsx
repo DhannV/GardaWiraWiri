@@ -6,8 +6,11 @@ import LandingPage from "./pages/landing/LandingPage";
 import OrderPaymentPage from "./pages/order/OrderPaymentPage";
 import ServicesPage from "./pages/landing/ServicesPage";
 import TermsAndFaqPage from "./pages/landing/TermsAndFaqPage";
+
 import LoginPage from "./pages/landing/LoginPage";
 import RegisterPage from "./pages/landing/RegisterPage";
+import ChangePasswordPage from "./pages/landing/ChangePasswordPage";
+
 import PelajariLayananPage from "./pages/landing/PelajariLayananPage";
 import KebijakanPrivasiPage from "./pages/landing/KebijakanPrivasiPage";
 // 🛠️ PERBAIKAN IMPORT: Pastikan folder aslinya sudah benar.
@@ -37,6 +40,7 @@ createRoot(document.getElementById("root")).render(
         {/* AUTHENTIKASI */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
 
         {/* DASHBOARD CLIENT */}
         <Route path="/dashboard-client" element={<DashboardClientPage />} />
